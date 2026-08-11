@@ -1,0 +1,215 @@
+openapi: 3.0.3
+info:
+  title: MiniBlog API
+  description: API REST para gestionar authors, posts y comments de MiniBlog (DevSpark).
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Servidor local
+  - url: https://TU-APP.up.railway.app
+    description: Servidor de producción (Railway) - actualizar tras el deploy
+
+paths:
+  /authors:
+    get:
+      summary: Listar todos los authors
+      tags: [Authors]
+      responses:
+        "200":
+          description: Lista de authors
+    post:
+      summary: Crear un nuevo author
+      tags: [Authors]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorInput"
+      responses:
+        "201":
+          description: Author creado
+        "400":
+          description: Datos inválidos o email duplicado
+
+  /authors/{id}:
+    get:
+      summary: Obtener un author por id
+      tags: [Authors]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Author encontrado
+        "404":
+          description: Author no encontrado
+    put:
+      summary: Actualizar un author
+      tags: [Authors]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthorInput"
+      responses:
+        "200":
+          description: Author actualizado
+        "404":
+          description: Author no encontrado
+    delete:
+      summary: Eliminar un author
+      tags: [Authors]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Author eliminado
+        "404":
+          description: Author no encontrado
+
+  /posts:
+    get:
+      summary: Listar todos los posts
+      tags: [Posts]
+      responses:
+        "200":
+          description: Lista de posts
+    post:
+      summary: Crear un nuevo post
+      tags: [Posts]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Post creado
+        "400":
+          description: Datos inválidos o author_id inexistente
+
+  /posts/{id}:
+    get:
+      summary: Obtener un post por id
+      tags: [Posts]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Post encontrado
+        "404":
+          description: Post no encontrado
+    put:
+      summary: Actualizar un post
+      tags: [Posts]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "200":
+          description: Post actualizado
+        "404":
+          description: Post no encontrado
+    delete:
+      summary: Eliminar un post
+      tags: [Posts]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Post eliminado
+        "404":
+          description: Post no encontrado
+
+  /posts/author/{authorId}:
+    get:
+      summary: Listar los posts de un author, con el detalle del author
+      tags: [Posts]
+      parameters:
+        - name: authorId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Author y su lista de posts
+        "404":
+          description: Author no encontrado
+
+  /posts/{id}/comments:
+    get:
+      summary: Listar los comentarios de un post (extra credit)
+      tags: [Comments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Lista de comentarios
+        "404":
+          description: Post no encontrado
+    post:
+      summary: Crear un comentario en un post (extra credit)
+      tags: [Comments]
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CommentInput"
+      responses:
+        "201":
+          description: Comentario creado
+        "400":
+          description: Datos inválidos
+
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+  schemas:
+    AuthorInput:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        bio:
+          type: string
+    PostInput:
+      type: object
+      required: [title, content, author_id]
+      properties:
+        title:
+          type: string
+        content:
+          type: string
+        author_id:
+          type: integer
+        published:
+          type: boolean
+    CommentInput:
+      type: object
+      required: [content]
+      properties:
+        content:
+          type: string
+        author_id:
+          type: integer

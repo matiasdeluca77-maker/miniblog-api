@@ -1,8 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// Cargamos el .env manualmente si existe (solo pasa en desarrollo local;
-// en Railway no hay .env, las variables ya vienen inyectadas por la plataforma)
 const envPath = path.resolve(__dirname, '../../.env');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
@@ -19,8 +17,6 @@ if (fs.existsSync(envPath)) {
 
 const { Pool } = require('pg');
 
-// En Railway, la base de datos expone una sola variable DATABASE_URL.
-// En desarrollo local seguimos usando las variables sueltas del .env.
 const pool = process.env.DATABASE_URL
   ? new Pool({
       connectionString: process.env.DATABASE_URL,
@@ -33,5 +29,11 @@ const pool = process.env.DATABASE_URL
       password: process.env.PGPASSWORD,
       database: process.env.PGDATABASE,
     });
+
+// CRÍTICO para producción: sin esto, un error de conexión (por ejemplo,
+// Railway cerrando una conexión inactiva) tira abajo todo el servidor.
+pool.on('error', (err) => {
+  console.error('Error inesperado en el pool de PostgreSQL:', err);
+});
 
 module.exports = pool;

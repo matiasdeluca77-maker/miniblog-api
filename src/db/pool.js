@@ -1,7 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
-// Cargamos el .env manualmente (evita el comportamiento raro de la librería dotenv)
+// Cargamos el .env manualmente si existe (solo pasa en desarrollo local;
+// en Railway no hay .env, las variables ya vienen inyectadas por la plataforma)
 const envPath = path.resolve(__dirname, '../../.env');
 if (fs.existsSync(envPath)) {
   const envContent = fs.readFileSync(envPath, 'utf8');
@@ -14,24 +15,23 @@ if (fs.existsSync(envPath)) {
     const value = trimmed.slice(eqIndex + 1).trim();
     process.env[key] = value;
   });
-} else {
-  console.log('ADVERTENCIA: no se encontró el archivo .env en', envPath);
 }
 
 const { Pool } = require('pg');
 
-console.log('DEBUG - Variables leídas del .env:');
-console.log('PGHOST:', process.env.PGHOST);
-console.log('PGUSER:', process.env.PGUSER);
-console.log('PGPASSWORD:', process.env.PGPASSWORD);
-console.log('PGDATABASE:', process.env.PGDATABASE);
-
-const pool = new Pool({
-  host: process.env.PGHOST,
-  port: process.env.PGPORT,
-  user: process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  database: process.env.PGDATABASE,
-});
+// En Railway, la base de datos expone una sola variable DATABASE_URL.
+// En desarrollo local seguimos usando las variables sueltas del .env.
+const pool = process.env.DATABASE_URL
+  ? new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false },
+    })
+  : new Pool({
+      host: process.env.PGHOST,
+      port: process.env.PGPORT,
+      user: process.env.PGUSER,
+      password: process.env.PGPASSWORD,
+      database: process.env.PGDATABASE,
+    });
 
 module.exports = pool;
